@@ -1,0 +1,120 @@
+import os
+import time
+from datetime import datetime
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import yagmail
+
+from apscheduler.schedulers.blocking import BlockingScheduler
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import Select
+
+# Load credentials securely
+USERNAME ='b24357'
+PASSWORD = 'Vitthal@2876'
+RECIPIENT_EMAIL = "b24357@students.iitmandi.ac.in"
+
+# Booking parameters
+BOOKING_DATE = input("enter date in DD-MM-YYYY ")
+BOOKING_TIME = input("enter time in HH:mm AM/PM ")
+
+
+PATH = input("1) North Campus -To- Mandi (via South) \n2) Mandi -To- North Campus (via South)\n3) North Campus -To- Mandi (Direct) \n kindly copy paste the route as input ")
+
+BOOKING_URL = "https://oas.iitmandi.ac.in/InstituteProcess/Facility/BusSeatReservation.aspx"
+
+import yagmail #USED this third party module because of some errors with smtp
+
+def send_email(booking_status, details):
+    """Send a confirmation email using yagmail."""
+    sender_email = "highdreameater@gmail.com"
+    smtp_password = os.getenv("EMAIL_PASSWORD")
+    recipient_email = "b24357@students.iitmandi.ac.in"  # Replace with the actual recipient's email
+
+    # Email body
+    subject = "Bus Booking Confirmation"
+    body = f"Booking Status: {booking_status}\nDetails:\n{details}"
+
+    # Send email using yagmail
+    yag = yagmail.SMTP(user=sender_email, password=smtp_password)
+    yag.send(to=recipient_email, subject=subject, contents=body)
+
+    print("Email sent successfully.")
+
+
+def book_seat():
+    
+    try:
+        # Initialize WebDriver
+        driver = webdriver.Chrome()  # Ensure ChromeDriver is installed
+        driver.get(BOOKING_URL)
+
+        # Wait for the login page to load
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, "txtLoginId")))
+
+        # Log in to the system
+        driver.find_element(By.ID, "txtLoginId").send_keys(USERNAME)
+        driver.find_element(By.ID, "txtPassword").send_keys(PASSWORD)
+        driver.find_element(By.ID, "btnLogin").click()
+        print("logindone")
+        # Navigate to the booking page
+        quicklinks="nav child_menu"
+        dropdown = WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.CLASS_NAME, "fa.fa-link")))
+        dropdown.click()
+        print("clicked")
+        driver.get("https://oas.iitmandi.ac.in/InstituteProcess/Facility/BusSeatReservation.aspx")
+        dati=driver.find_element(By.ID, "txtFromDate")
+        dati.click()
+        for _ in range(10):
+            dati.send_keys(Keys.ARROW_LEFT)
+        dati.send_keys(BOOKING_DATE)
+        print("donedate")
+        route=driver.find_element(By.ID, "ddlRoute")
+        select = Select(route)
+        # Select by visible text
+        select.select_by_visible_text(PATH)
+        print("selected route")
+        time.sleep(1)
+        samay=driver.find_element(By.ID, "ddlTiming")
+        select1 = Select(samay)
+       
+        select1.select_by_visible_text(BOOKING_TIME)
+        print("samay agya")
+        time.sleep(2)
+        BUS=driver.find_element(By.ID, "ddlBus")
+        select2 = Select(BUS)
+        #select by index of dropdown
+        select2.select_by_index(2)
+        print("bus agyi")
+        time.sleep(1)
+        driver.find_element(By.ID, "checkbox27").click()
+        print("tick hogya")
+        time.sleep(1)
+        driver.find_element(By.ID, "lnkSave").click()
+        # Booking success
+        booking_status = "Success"
+        details = f"Path: {PATH}, Date: {BOOKING_DATE}, Time: {BOOKING_TIME}"
+        send_email(booking_status, details)
+
+    except Exception as e:
+        # Booking failure
+        booking_status = "Failed"
+        details = str(e)
+        send_email(booking_status, details)
+
+    finally:
+        driver.quit()
+
+# Schedule the task
+scheduler = BlockingScheduler()
+when_tobook=input("enter the date when to try for the reservation ")
+when_totry=input("enter the specific time in above specified format ")
+#when_tobook="2025-01-28" (tested by providing time 2min in future(by dev) for simplicity)
+#when_totry="02:49 AM" (FOR TESTING)
+schedule_time = datetime.strptime(f"{when_tobook} {when_totry}", "%Y-%m-%d %I:%M %p")
+scheduler.add_job(book_seat, 'date', run_date=schedule_time)
+scheduler.start()
+
+
