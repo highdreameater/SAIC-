@@ -29,7 +29,7 @@ import yagmail #USED this third party module because of some errors with smtp
 
 def send_email(booking_status, details):
     """Send a confirmation email using yagmail."""
-    sender_email = "highdreameater@gmail.com"
+    sender_email = "INSTI_EMAIL"
     smtp_password = os.getenv("EMAIL_PASSWORD")
     recipient_email = "b24357@students.iitmandi.ac.in"  # Replace with the actual recipient's email
 
