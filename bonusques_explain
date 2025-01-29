@@ -1,0 +1,39 @@
+1. Initialize Logging
+The script logs all activities to C:\Users\Public\stealth_log.txt using log_message().
+It records detected drives, copied files, and upload statuses.
+2. Detect External Drives
+The script checks connected drives using psutil.disk_partitions().
+It identifies removable drives and keeps track of newly inserted or removed ones.
+3. Monitor Drives for a Specific Folder ("lol")
+When a new drive is detected, it checks if the "lol" folder exists.
+If found, it:
+Creates C:\Users\Public\copied_lol if not already present.
+Copies all files and folders from "lol" into this local directory.
+4. Log Drive Contents
+The script lists all files and folders in the external drive.
+It saves this log to stealth_log.txt.
+5. Detect Drive Removal
+When a drive is unplugged, it logs the event and uploads:
+stealth_log.txt
+The copied "lol" folder (as a .zip file)
+6. Upload Files to Uploadcare
+The script uses requests.post() to send the files to Uploadcare.
+If the upload is successful, it logs the file ID.
+If it fails, the error is logged.
+7. Cleanup Process
+After uploading, it deletes:
+The local copy of the "lol" folder.
+The created .zip file.
+The stealth_log.txt.
+This ensures no traces remain on the system.
+8. Continuous Monitoring
+The script runs inside an infinite loop, checking for new drives every 5 seconds.
+This ensures it can detect any USB inserted at any time.
+
+
+so first i had to look for ways to run any file in background without any console or window ,
+so at first i thought using pyinstaller i should create a .exe file and place it in the startup , but it 
+didnt work as intended , so dropped that
+so i made a svb file in which i gave the path to my python script , so now this svb is a kind of link to 
+my script and 
+also the
