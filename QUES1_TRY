@@ -1,0 +1,7 @@
+first i needed to find the port of the localhost , so entered tulnp to find ports , and :80 ran the localhost , so then i tried to login and create  a blank signup , it worked i was in , but nothing concrete , then i tried inspecting it 
+then i tried basic sql injection on the url , but it was sanitizing all the input (as i saw in raw data ) so tried random urls , like admin.php , and config , but nothing 
+then in config i found database , so for trying i tried typing databse directly in url , and it worked ! i found seed file , in which 'piyush bhai' username had , password = 15476daa5905d5e8e38062b4dc423cd7 , but it was hashed , so i tried 
+to find its encryption code , and lurking in the file system's var/www/models/User.php i found that it was md5 encryption which means , it cannot be reversed , so i gave up on that , and then i went on trying many more sql injections but came on nothing , perl command worked but nothing found on it as well .
+basic injections were not working because of the sanitisations but one came with error and i found the whole white screen with "hello"
+
+find all the photos and screenshots on-- https://drive.google.com/drive/folders/17D42CHtzrQJk8mctWDWTNXWxYfnEF8pp?usp=drive_link
