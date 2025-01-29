@@ -1,0 +1,2 @@
+Set objShell = CreateObject("WScript.Shell") 
+objShell.Run "pythonw C:\Users\highd\OneDrive\Desktop\BONUS\b22.py", 0, False
