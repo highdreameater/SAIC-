@@ -1,39 +1,41 @@
-1. Initialize Logging
-The script logs all activities to C:\Users\Public\stealth_log.txt using log_message().
-It records detected drives, copied files, and upload statuses.
-2. Detect External Drives
-The script checks connected drives using psutil.disk_partitions().
-It identifies removable drives and keeps track of newly inserted or removed ones.
-3. Monitor Drives for a Specific Folder ("lol")
-When a new drive is detected, it checks if the "lol" folder exists.
-If found, it:
-Creates C:\Users\Public\copied_lol if not already present.
-Copies all files and folders from "lol" into this local directory.
-4. Log Drive Contents
-The script lists all files and folders in the external drive.
-It saves this log to stealth_log.txt.
-5. Detect Drive Removal
-When a drive is unplugged, it logs the event and uploads:
-stealth_log.txt
-The copied "lol" folder (as a .zip file)
-6. Upload Files to Uploadcare
-The script uses requests.post() to send the files to Uploadcare.
-If the upload is successful, it logs the file ID.
-If it fails, the error is logged.
-7. Cleanup Process
-After uploading, it deletes:
-The local copy of the "lol" folder.
-The created .zip file.
-The stealth_log.txt.
-This ensures no traces remain on the system.
-8. Continuous Monitoring
-The script runs inside an infinite loop, checking for new drives every 5 seconds.
-This ensures it can detect any USB inserted at any time.
+1. **Initialize Logging**  
+   The script logs all activities to `C:\Users\Public\stealth_log.txt` using the function `log_message()`. It records detected drives, copied files, and the status of uploads.
 
+2. **Detect External Drives**  
+   The script checks for connected drives using `psutil.disk_partitions()`. It identifies removable drives and keeps track of any newly inserted or removed ones.
 
-so first i had to look for ways to run any file in background without any console or window ,
-so at first i thought using pyinstaller i should create a .exe file and place it in the startup , but it 
-didnt work as intended , so dropped that
-so i made a svb file in which i gave the path to my python script , so now this svb is a kind of link to 
-my script and 
-also the
+3. **Monitor Drives for a Specific Folder ("lol")**  
+   When a new drive is detected, the script checks if the "lol" folder exists. If found, it:
+   - Creates `C:\Users\Public\copied_lol` if it is not already present.
+   - Copies all files and folders from the "lol" directory into this local directory.
+
+4. **Log Drive Contents**  
+   The script lists all files and folders in the external drive and saves this log to `stealth_log.txt`.
+
+5. **Detect Drive Removal**  
+   When a drive is unplugged, it logs the event and uploads:
+   - `stealth_log.txt`
+   - The copied "lol" folder in a .zip file.
+
+6. **Upload Files to Uploadcare**  
+   The script uses `requests.post()` to send the files to Uploadcare. If the upload is successful, it logs the file ID; if it fails, the error is logged.
+
+7. **Cleanup Process**  
+   After uploading, the script deletes:
+   - The local copy of the "lol" folder.
+   - The created .zip file.
+   - `stealth_log.txt`.  
+   This ensures no traces remain on the system.
+
+8. **Continuous Monitoring**  
+   The script runs in an infinite loop, checking for new drives every 5 seconds. This ensures it can detect any USB device inserted at any time.
+
+---
+
+Initially, I sought ways to run a file in the background without displaying any console or window. At first, I considered using PyInstaller to create an executable file and place it in the startup folder, but that didn't work as intended, so I abandoned that approach.
+
+Instead, I created an SVB file that links to my Python script, allowing it to run quietly (stealthily). 
+
+The script also had some errors. I first attempted to upload files via a Google Form, but that failed. I then explored using the Google API, but it was too complex for obtaining the necessary credentials. Ultimately, I opted for a third-party API for uploading files, which worked successfully.
+
+For the code, I utilized some modules from GPT for deleting files and detecting external drives. I manipulated these modules to fit my requirements and tested them separately to ensure clarity in their functionality. Additionally, I evaluated the log files separately while experimenting with the executable method at startup.
